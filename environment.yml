@@ -1,0 +1,22 @@
+name: micrograd
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+  - nvidia
+  - pytorch
+dependencies:
+  - python=3.12
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.4
+  - notebook
+  - jupyterlab
+  - voila
+  - ipywidgets
+  - graphviz
+  - numpy
+  - matplotlib
+  - scikit-learn
+  - graphviz

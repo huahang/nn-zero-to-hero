@@ -1,47 +1,38 @@
-import numpy as np
+import torch
+import random
+
 
 def load_data(path, block_size=3):
-  words = open(path, "r").read().splitlines()
-  all_letters = []
-  for word in words:
-    for letter in word:
-      all_letters.append(letter)
-  all_letters = sorted(list(set(all_letters)))
-  stoi = {letter: i+1 for i, letter in enumerate(all_letters)}
-  itos = {i+1: letter for i, letter in enumerate(all_letters)}
-  stoi["."] = 0
-  itos[0] = "."
-  X = []
-  Y = []
-  for word in words:
-    chs = "." * block_size + word + "."
-    for i in range(len(chs) - block_size):
-      x = chs[i:i+block_size]
-      y = chs[i+block_size]
-      x = [stoi[ch] for ch in x]
-      y = [stoi[y]]
-      X.append(x)
-      Y.append(y)
-  X = np.array(X)
-  Y = np.array(Y)
-  N = len(X)
-  N_train = int(0.8 * N)
-  N_val = (len(X) - N_train) // 2
-  N_test = N - N_train - N_val
-  X_train = X[:N_train]
-  Y_train = Y[:N_train]
-  X_val = X[N_train:N_train+N_val]
-  Y_val = Y[N_train:N_train+N_val]
-  X_test = X[N_train+N_val:]
-  Y_test = Y[N_train+N_val:]
-  X = {
-    "train": X_train,
-    "val": X_val,
-    "test": X_test
-  }
-  Y = {
-    "train": Y_train,
-    "val": Y_val,
-    "test": Y_test
-  }
-  return X, Y, stoi, itos
+    words = open(path, "r").read().splitlines()
+    all_letters = []
+    for word in words:
+        for letter in word:
+            all_letters.append(letter)
+    all_letters = sorted(list(set(all_letters)))
+    stoi = {letter: i + 1 for i, letter in enumerate(all_letters)}
+    itos = {i + 1: letter for i, letter in enumerate(all_letters)}
+    stoi["."] = 0
+    itos[0] = "."
+
+    def build_dataset(words):
+        X, Y = [], []
+        for w in words:
+            context = [0] * block_size
+            for ch in w + ".":
+                ix = stoi[ch]
+                X.append(context)
+                Y.append(ix)
+                context = context[1:] + [ix]  # crop and append
+        X = torch.tensor(X)
+        Y = torch.tensor(Y)
+        print(X.shape, Y.shape)
+        return X, Y
+
+    random.seed(42)
+    random.shuffle(words)
+    n1 = int(0.8 * len(words))
+    n2 = int(0.9 * len(words))
+    Xtr, Ytr = build_dataset(words[:n1])
+    Xdev, Ydev = build_dataset(words[n1:n2])
+    Xte, Yte = build_dataset(words[n2:])
+    return Xtr, Ytr, Xdev, Ydev, Xte, Yte, stoi, itos
